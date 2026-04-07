@@ -1,4 +1,4 @@
-name: Dataflow CI/CD Pipeline
+name: Dataflow CI/CD with WIF
 
 on:
   push:
@@ -9,19 +9,24 @@ jobs:
   dataflow-job:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      id-token: write   #  REQUIRED for WIF
+
     steps:
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    - name: Authenticate to GCP
-      uses: google-github-actions/auth@v1
+    - name: Authenticate to GCP (WIF)
+      uses: google-github-actions/auth@v2
       with:
-        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+        workload_identity_provider: "projects/5848878514/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
+        service_account: "github-dataflow-sa@sandbox-explorer-490214.iam.gserviceaccount.com"
 
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
 
-    - name: Install Dependencies
+    - name: Install Python Dependencies
       run: |
         pip install -r requirements.txt
 
@@ -29,8 +34,10 @@ jobs:
       run: |
         python dataflow/wordcount.py \
           --runner=DataflowRunner \
-          --project=${{ secrets.sandbox-explorer-490214 }} \
+          --project=sandbox-explorer-490214 \
           --region=us-central1 \
-          --temp_location=gs://test-bucket-2015/temp1 \
+          --temp_location=gs://test-bucket-2015/temp \
           --staging_location=gs://test-bucket-2015/staging \
-          --job_name=wordcount-job-$(date +%Y%m%d-%H%M%S)
+          --input=gs://test-bucket-2015/input/sample.txt \
+          --output=gs://test-bucket-2015/output/result \
+          --job_name=wordcount-$(date +%Y%m%d-%H%M%S)
