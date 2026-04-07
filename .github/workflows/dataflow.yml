@@ -1,0 +1,36 @@
+name: Dataflow CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  dataflow-job:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Authenticate to GCP
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+
+    - name: Install Dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Run Dataflow Job
+      run: |
+        python dataflow/wordcount.py \
+          --runner=DataflowRunner \
+          --project=${{ secrets.sandbox-explorer-490214 }} \
+          --region=us-central1 \
+          --temp_location=gs://test-bucket-2015/temp1 \
+          --staging_location=gs://test-bucket-2015/staging \
+          --job_name=wordcount-job-$(date +%Y%m%d-%H%M%S)
