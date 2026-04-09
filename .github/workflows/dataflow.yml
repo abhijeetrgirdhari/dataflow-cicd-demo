@@ -46,4 +46,5 @@ jobs:
             --staging_location=gs://test-bucket-2015/staging \
             --input=gs://test-bucket-2015/input/sample.txt \
             --output=gs://test-bucket-2015/output/result \
+            --service_account_email=github-dataflow-sa@sandbox-explorer-490214.iam.gserviceaccount.com \
             --job_name=wordcount-$(date +%Y%m%d-%H%M%S)
